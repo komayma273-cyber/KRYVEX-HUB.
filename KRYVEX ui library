@@ -1,7 +1,7 @@
 --[[
 =========================================================
                     KRYVEX HUB UI LIBRARY
-                       v1.8.0
+                       v1.8.1
 =========================================================
 
 CORE
@@ -81,7 +81,7 @@ local LocalPlayer = Players.LocalPlayer
 local KRYVEX = {}
 
 KRYVEX.Name = "Kryvex Hub"
-KRYVEX.Version = "1.8.0"
+KRYVEX.Version = "1.8.1"
 
 --=========================================================
 -- THEME
@@ -10680,7 +10680,16 @@ function KRYVEX:CreateWindow(
             Window.QuickButtonHolder:Destroy()
         end
 
-        local colors = config.Colors or KRYVEX.Theme
+        local customColors = config.Colors or {}
+        local colors = {
+            Card = customColors.Card or Color3.fromRGB(67, 70, 77),
+            CardHover = customColors.CardHover or Color3.fromRGB(84, 87, 95),
+            Primary = customColors.Primary or Color3.fromRGB(211, 215, 222),
+            PrimaryDark = customColors.PrimaryDark or Color3.fromRGB(48, 51, 57),
+            Text = customColors.Text or Color3.fromRGB(255, 255, 255),
+            Success = customColors.Success or Color3.fromRGB(113, 220, 159),
+            Icon = customColors.Icon or Color3.fromRGB(242, 244, 248),
+        }
         local callbacks = config.Callbacks or config
         local connections = Window.QuickButtonConnections
         local alive = true
@@ -10714,22 +10723,24 @@ function KRYVEX:CreateWindow(
                 Name = name,
                 Size = UDim2.fromOffset(size.X, size.Y),
                 Position = UDim2.new(startX, offsetX, startY, 0),
-                BackgroundColor3 = colors.Card or KRYVEX.Theme.Card,
+                BackgroundColor3 = colors.Card,
                 BorderSizePixel = 0,
                 AutoButtonColor = false,
                 Text = text,
-                TextColor3 = colors.Text or KRYVEX.Theme.Text,
-                TextSize = 13,
+                TextColor3 = colors.Text,
+                TextSize = 14,
+                TextStrokeColor3 = Color3.fromRGB(25, 27, 31),
+                TextStrokeTransparency = 0.55,
                 Font = Enum.Font.GothamBold,
                 ZIndex = 100,
             })
             button.Parent = FloatGui
             AddCorner(button, config.CornerRadius or KRYVEX.Corners.Element)
-            local stroke = AddStroke(button, colors.Primary or KRYVEX.Theme.Primary, 0.25, 1.5)
+            local stroke = AddStroke(button, colors.Primary, 0.12, 1.6)
             local gradient = Instance.new("UIGradient")
             gradient.Color = ColorSequence.new(
-                colors.PrimaryDark or KRYVEX.Theme.PrimaryDark,
-                colors.CardHover or KRYVEX.Theme.CardHover
+                colors.Card,
+                colors.CardHover
             )
             gradient.Rotation = 35
             gradient.Parent = button
@@ -10815,7 +10826,7 @@ function KRYVEX:CreateWindow(
                 if name == "QuickToggle" then
                     toggleState = not toggleState
                     button.Text = (config.ToggleText or "TOGGLE") .. (toggleState and "  •  ON" or "  •  OFF")
-                    button.TextColor3 = toggleState and (colors.Success or KRYVEX.Theme.Success) or (colors.Text or KRYVEX.Theme.Text)
+                    button.TextColor3 = toggleState and colors.Success or colors.Text
                     callCallback(callbacks.OnToggle, toggleState)
                 elseif name == "QuickAction" then
                     local now = os.clock()
@@ -10837,7 +10848,7 @@ function KRYVEX:CreateWindow(
             table.insert(connections, button.MouseEnter:Connect(function()
                 if alive then
                     TweenService:Create(button, TweenInfo.new(0.12), {
-                        BackgroundColor3 = colors.CardHover or KRYVEX.Theme.CardHover,
+                        BackgroundColor3 = colors.CardHover,
                     }):Play()
                     stroke.Transparency = 0
                 end
@@ -10845,7 +10856,7 @@ function KRYVEX:CreateWindow(
             table.insert(connections, button.MouseLeave:Connect(function()
                 if alive then
                     TweenService:Create(button, TweenInfo.new(0.12), {
-                        BackgroundColor3 = colors.Card or KRYVEX.Theme.Card,
+                        BackgroundColor3 = colors.Card,
                     }):Play()
                     stroke.Transparency = 0.25
                 end
@@ -10872,8 +10883,75 @@ function KRYVEX:CreateWindow(
             "QuickTarget",
             Vector2.new(targetSize, targetSize),
             left,
-            config.TargetText or "◎"
+            ""
         )
+
+        -- เป้าเล็งเป็นไอคอน Frame แยกจากปุ่ม จึงหมุนเฉพาะไอคอน
+        local crosshair = Create("Frame", {
+            Name = "TargetCrosshair",
+            Size = UDim2.fromOffset(36, 36),
+            Position = UDim2.fromScale(0.5, 0.5),
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundTransparency = 1,
+            ZIndex = 102,
+        })
+        crosshair.Parent = targetButton
+
+        local ring = Create("Frame", {
+            Name = "Ring",
+            Size = UDim2.fromOffset(22, 22),
+            Position = UDim2.fromOffset(7, 7),
+            BackgroundTransparency = 1,
+            ZIndex = 103,
+        })
+        ring.Parent = crosshair
+        AddCorner(ring, 11)
+        AddStroke(ring, colors.Icon, 0, 2)
+
+        local function addCrosshairLine(name, x, y, width, height)
+            local line = Create("Frame", {
+                Name = name,
+                Position = UDim2.fromOffset(x, y),
+                Size = UDim2.fromOffset(width, height),
+                BackgroundColor3 = colors.Icon,
+                BorderSizePixel = 0,
+                ZIndex = 103,
+            })
+            line.Parent = crosshair
+        end
+        addCrosshairLine("Top", 17, 0, 2, 9)
+        addCrosshairLine("Bottom", 17, 27, 2, 9)
+        addCrosshairLine("Left", 0, 17, 9, 2)
+        addCrosshairLine("Right", 27, 17, 9, 2)
+
+        local centerDot = Create("Frame", {
+            Name = "CenterDot",
+            Position = UDim2.fromOffset(16, 16),
+            Size = UDim2.fromOffset(4, 4),
+            BackgroundColor3 = colors.Success,
+            BorderSizePixel = 0,
+            ZIndex = 104,
+        })
+        centerDot.Parent = crosshair
+        AddCorner(centerDot, 2)
+
+        local targetSpinTween
+        local iconSpinSpeed = tonumber(config.IconSpinSpeed) or 120
+        if iconSpinSpeed ~= 0 then
+            local direction = iconSpinSpeed < 0 and -1 or 1
+            targetSpinTween = TweenService:Create(
+                crosshair,
+                TweenInfo.new(
+                    360 / math.abs(iconSpinSpeed),
+                    Enum.EasingStyle.Linear,
+                    Enum.EasingDirection.InOut,
+                    -1
+                ),
+                { Rotation = 360 * direction }
+            )
+            targetSpinTween:Play()
+        end
+
         Window.QuickButtonHolder = toggleButton
 
         local api = {
@@ -10886,7 +10964,7 @@ function KRYVEX:CreateWindow(
             toggleState = value == true
             if toggleButton and toggleButton.Parent then
                 toggleButton.Text = (config.ToggleText or "TOGGLE") .. (toggleState and "  •  ON" or "  •  OFF")
-                toggleButton.TextColor3 = toggleState and (colors.Success or KRYVEX.Theme.Success) or (colors.Text or KRYVEX.Theme.Text)
+                toggleButton.TextColor3 = toggleState and colors.Success or colors.Text
             end
             if not silent then
                 callCallback(callbacks.OnToggle, toggleState)
@@ -10909,6 +10987,10 @@ function KRYVEX:CreateWindow(
                 end
             end
             table.clear(connections)
+            if targetSpinTween then
+                targetSpinTween:Cancel()
+                targetSpinTween = nil
+            end
             if Window.QuickButtonHolder == toggleButton then
                 Window.QuickButtonHolder = nil
             end
