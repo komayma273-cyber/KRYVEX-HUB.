@@ -10689,6 +10689,9 @@ function KRYVEX:CreateWindow(
             Text = customColors.Text or Color3.fromRGB(255, 255, 255),
             Success = customColors.Success or Color3.fromRGB(113, 220, 159),
             Icon = customColors.Icon or Color3.fromRGB(242, 244, 248),
+            BorderLight = customColors.BorderLight or Color3.fromRGB(232, 234, 238),
+            BorderMid = customColors.BorderMid or Color3.fromRGB(126, 129, 135),
+            BorderDark = customColors.BorderDark or Color3.fromRGB(18, 19, 22),
         }
         local callbacks = config.Callbacks or config
         local connections = Window.QuickButtonConnections
@@ -10735,8 +10738,19 @@ function KRYVEX:CreateWindow(
                 ZIndex = 100,
             })
             button.Parent = FloatGui
-            AddCorner(button, config.CornerRadius or KRYVEX.Corners.Element)
-            local stroke = AddStroke(button, colors.Primary, 0.12, 1.6)
+            AddCorner(button, config.CornerRadius or 12)
+            local stroke = AddStroke(button, colors.Primary, 0.08, 2)
+            stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+            local borderGradient = Instance.new("UIGradient")
+            borderGradient.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, colors.BorderLight),
+                ColorSequenceKeypoint.new(0.5, colors.BorderMid),
+                ColorSequenceKeypoint.new(1, colors.BorderDark),
+            })
+            borderGradient.Rotation = config.BorderGradientRotation or 45
+            borderGradient.Parent = stroke
+
             local gradient = Instance.new("UIGradient")
             gradient.Color = ColorSequence.new(
                 colors.Card,
